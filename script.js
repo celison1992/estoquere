@@ -7,23 +7,16 @@ import {
     orderBy
 } from 'firebase/firestore';
 
-// ==============================
-// 1. Verifica se Firebase está pronto
-// ==============================
 function isFirebaseReady() {
     return typeof db !== 'undefined' && typeof auth !== 'undefined';
 }
 
-// ==============================
-// 2. Cadastro de Produto
-// ==============================
 function setupCadastroProduto(user) {
     const form = document.getElementById('cadastroForm');
     const custoInput = document.getElementById('custoInput');
     const margemInput = document.getElementById('margemInput');
     const precoVendaInput = document.getElementById('precoVendaInput');
 
-    // Atualiza preço de venda automaticamente
     function calcularPrecoVenda() {
         const custo = parseFloat(custoInput.value) || 0;
         const margem = parseFloat(margemInput.value) || 0;
@@ -45,7 +38,7 @@ function setupCadastroProduto(user) {
 
         const codigo = document.getElementById('codigoBarras').value;
         const marca = document.getElementById('marca').value;
-        const descricao = document.getElementById('productDescription').value;
+        const modelo = document.getElementById('modelo').value;
         const custo = parseFloat(custoInput.value);
         const margem = parseFloat(margemInput.value);
         const venda = parseFloat(precoVendaInput.value);
@@ -55,7 +48,7 @@ function setupCadastroProduto(user) {
             await addDoc(collection(db, 'produtos'), {
                 codigo,
                 marca,
-                descricao,
+                modelo,
                 custo,
                 margem,
                 venda,
@@ -80,9 +73,6 @@ function setupCadastroProduto(user) {
     });
 }
 
-// ==============================
-// 3. Listagem de Produtos
-// ==============================
 window.setupProdutosPage = function () {
     const tbody = document.getElementById('productsTableBody');
     const loadingStatus = document.getElementById('loadingStatus');
@@ -109,7 +99,7 @@ window.setupProdutosPage = function () {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td class="px-6 py-4 font-mono text-sm">${p.codigo}</td>
-                <td class="px-6 py-4">${p.descricao}</td>
+                <td class="px-6 py-4">${p.modelo}</td>
                 <td class="px-6 py-4">${p.marca}</td>
                 <td class="px-6 py-4 text-right text-red-600 font-semibold">R$ ${p.custo.toFixed(2)}</td>
                 <td class="px-6 py-4 text-right text-green-700 font-bold">R$ ${p.venda.toFixed(2)}</td>
@@ -122,9 +112,7 @@ window.setupProdutosPage = function () {
     });
 };
 
-// ==============================
-// 4. Inicialização segura
-// ==============================
+// Inicialização segura
 window.onAuthStateChanged(auth, (user) => {
     const path = window.location.pathname.split('/').pop();
 
