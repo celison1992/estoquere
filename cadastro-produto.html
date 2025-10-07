@@ -1,90 +1,176 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstoquEré | Cadastro de Produto</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body class="min-h-screen flex flex-col">
-
-    <header class="fixed top-0 left-0 w-full bg-indigo-700 shadow-lg z-10">
-        <nav class="container mx-auto px-4 h-16 flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-white">Cadastro de Produto</h1>
-            <a href="index.html" class="text-white hover:text-indigo-200 transition duration-150 flex items-center">
-                <span class="mr-1">&larr;</span> Voltar ao Menu
-            </a>
-        </nav>
-    </header>
-
-    <main class="flex-grow main-container mt-20 p-8 bg-white rounded-xl shadow-xl">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Informações do Novo Item</h2>
-
-        <div id="scanner-container" class="mb-6 rounded-xl overflow-hidden shadow-lg border border-gray-200">
-            <div id="interactive" class="viewport h-56 bg-gray-800 relative"></div>
-            <p id="barcode-result" class="text-center p-3 font-medium bg-gray-100 text-gray-700">Pronto para iniciar o scanner.</p>
-        </div>
-
-        <form id="cadastroForm" class="space-y-6">
-            <div>
-                <label for="codigoBarras" class="block text-sm font-medium text-gray-700 mb-1">Código de Barras</label>
-                <input type="text" id="codigoBarras" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 shadow-sm font-mono" placeholder="Escaneie ou digite o código">
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="marca" class="block text-sm font-medium text-gray-700 mb-1">Marca</label>
-                    <input type="text" id="marca" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 shadow-sm" placeholder="Ex: Samsung, LG">
-                </div>
-                <div>
-                    <label for="modelo" class="block text-sm font-medium text-gray-700 mb-1">Modelo</label>
-                    <input type="text" id="modelo" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 shadow-sm" placeholder="Ex: Galaxy S22, Smart TV 50">
-                </div>
-            </div>
-
-            <h3 class="text-xl font-semibold text-gray-700 pt-4 border-t mt-4">Gestão de Preço</h3>
-
-            <div class="grid grid-cols-3 gap-4 items-end">
-                <div>
-                    <label for="custoInput" class="block text-sm font-medium text-gray-700 mb-1">Custo (R$)</label>
-                    <input type="number" id="custoInput" step="0.01" value="0.00" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 shadow-sm text-red-600 font-bold" placeholder="Preço de Compra">
-                </div>
-                <div>
-                    <label for="margemInput" class="block text-sm font-medium text-gray-700 mb-1">Margem (%)</label>
-                    <input type="number" id="margemInput" value="30" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm font-bold" placeholder="Margem desejada">
-                </div>
-                <div>
-                    <label for="precoVendaInput" class="block text-sm font-medium text-gray-700 mb-1">Preço de Venda (R$)</label>
-                    <input type="text" id="precoVendaInput" readonly value="0.00" class="w-full p-3 border border-gray-300 rounded-lg shadow-inner bg-green-100 text-green-700 font-extrabold" title="Calculado automaticamente">
-                </div>
-            </div>
-
-            <div>
-                <label for="productQuantity" class="block text-sm font-medium text-gray-700 mb-1">Quantidade Inicial em Estoque</label>
-                <input type="number" id="productQuantity" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 shadow-sm" placeholder="Ex: 50">
-            </div>
-
-            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition duration-200 shadow-md">
-                📦 Salvar Item no Estoque
-            </button>
-        </form>
-
+<main class="flex-grow main-container mt-20 p-8 bg-white rounded-xl shadow-xl">
         <div id="messageBox" class="mt-4 p-4 rounded-lg text-center hidden"></div>
     </main>
 
-    <footer class="bg-gray-800 text-white py-4 mt-auto">
-        <div class="container mx-auto text-center text-sm">
-            &copy; 2025 EstoquEré. Todos os direitos reservados.
+    <section class="main-container p-8">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Itens Recentes Cadastrados (Últimos 10)</h3>
+        
+        <div class="overflow-x-auto bg-white rounded-xl shadow-xl">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modelo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Custo</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Venda</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd</th>
+                    </tr>
+                </thead>
+                <tbody id="recentProductsTableBody" class="bg-white divide-y divide-gray-200">
+                    <tr><td colspan="6" class="px-6 py-4 text-center text-gray-400">Carregando produtos...</td></tr>
+                </tbody>
+            </table>
         </div>
-    </footer>
+    </section>
+    <footer class="bg-gray-800 text-white py-4 mt-auto">
+    ```
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+## 2. Atualização do `script.js` (Refatoração da Listagem)
+
+Refatoramos a lógica de listagem (que estava em `window.setupProdutosPage`) para uma função reutilizável.
+
+### `script.js` (Versão Corrigida e Refatorada)
+
+```javascript
+// script.js
+
+function isFirebaseReady() {
+    return typeof db !== 'undefined' && typeof auth !== 'undefined';
+}
+
+// NOVO: Função genérica para listar produtos em qualquer lugar
+// 'tableBodyId': o ID do <tbody> onde os dados devem ser injetados
+// 'limitCount': Limita o número de itens (para a lista de 'recentes')
+function setupProductListing(tableBodyId, limitCount = null) {
+    const tbody = document.getElementById(tableBodyId);
     
-    <script src="firebase-config.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+    // Sai da função se o elemento não existir na página (ex: se estiver no index.html)
+    if (!tbody) return;
+
+    // Constrói a consulta ao Firestore
+    let produtosQuery = firebase.firestore().collection('produtos')
+                                .orderBy('criadoEm', 'desc');
+
+    // Aplica limite se for a lista de itens recentes (cadastro-produto.html)
+    if (limitCount !== null) {
+        produtosQuery = produtosQuery.limit(limitCount);
+    }
+
+    produtosQuery.onSnapshot((snapshot) => {
+        tbody.innerHTML = '';
+
+        if (snapshot.empty) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500 italic">
+                        Nenhum produto cadastrado ainda.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        snapshot.forEach(doc => {
+            const p = doc.data();
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-6 py-4 font-mono text-sm">${p.codigo}</td>
+                <td class="px-6 py-4">${p.modelo}</td>
+                <td class="px-6 py-4">${p.marca}</td>
+                <td class="px-6 py-4 text-right text-red-600 font-semibold">R$ ${p.custo.toFixed(2)}</td>
+                <td class="px-6 py-4 text-right text-green-700 font-bold">R$ ${p.venda.toFixed(2)}</td>
+                <td class="px-6 py-4 text-center">${p.quantidade}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    });
+}
+
+
+export function setupCadastroProduto(user) { 
+    const form = document.getElementById('cadastroForm');
+    const custoInput = document.getElementById('custoInput');
+    const margemInput = document.getElementById('margemInput');
+    const precoVendaInput = document.getElementById('precoVendaInput');
+
+    function calcularPrecoVenda() {
+        const custo = parseFloat(custoInput.value) || 0;
+        const margem = parseFloat(margemInput.value) || 0;
+        const venda = custo + (custo * margem / 100);
+        precoVendaInput.value = venda.toFixed(2);
+    }
+
+    calcularPrecoVenda(); 
+    custoInput.addEventListener('input', calcularPrecoVenda);
+    margemInput.addEventListener('input', calcularPrecoVenda);
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!isFirebaseReady() || !user) { 
+            alert("Erro: O Firebase não está inicializado ou o usuário não está autenticado.");
+            return;
+        }
+
+        const codigo = document.getElementById('codigoBarras').value;
+        const marca = document.getElementById('marca').value;
+        const modelo = document.getElementById('modelo').value;
+        const custo = parseFloat(custoInput.value);
+        const margem = parseFloat(margemInput.value);
+        const venda = parseFloat(precoVendaInput.value);
+        const quantidade = parseInt(document.getElementById('productQuantity').value);
+
+        try {
+            console.log("Salvando produto...");
+            
+            const docRef = await firebase.firestore().collection('produtos').add({ 
+                codigo,
+                marca,
+                modelo,
+                custo,
+                margem,
+                venda,
+                quantidade,
+                criadoPor: user.uid, 
+                criadoEm: new Date()
+            });
+            
+            console.log("Produto salvo com ID:", docRef.id);
+
+            const box = document.getElementById('messageBox');
+            box.textContent = '✅ Produto cadastrado com sucesso! A lista abaixo será atualizada.';
+            box.classList.remove('hidden', 'bg-red-100', 'text-red-700');
+            box.classList.add('bg-green-100', 'text-green-700');
+            form.reset();
+            precoVendaInput.value = '0.00';
+            calcularPrecoVenda();
+            
+            // A lista de produtos recentes (setupProductListing) atualizará automaticamente via onSnapshot
+            
+        } catch (error) {
+            console.error("Erro ao salvar produto:", error);
+            const box = document.getElementById('messageBox');
+            box.textContent = '❌ Erro ao salvar produto. (Verifique o console e as regras do Firebase!)';
+            box.classList.remove('hidden', 'bg-green-100', 'text-green-700');
+            box.classList.add('bg-red-100', 'text-red-700');
+        }
+    });
+    
+    // NOVO: Inicia a listagem de produtos recentes para o cadastro-produto.html (limite de 10)
+    setupProductListing('recentProductsTableBody', 10);
+}
+
+// ATUALIZADO: Função original de listagem para produtos.html
+window.setupProdutosPage = function () {
+    // Listagem completa (sem limite)
+    setupProductListing('productsTableBody', null);
+    
+    // Lógica para mostrar o total (se o elemento existir)
+    const loadingStatus = document.getElementById('loadingStatus');
+    if (loadingStatus) {
+        firebase.firestore().collection('produtos').onSnapshot((snapshot) => {
+            loadingStatus.textContent = `Total de produtos: ${snapshot.size}`;
+        });
+    }
+};
