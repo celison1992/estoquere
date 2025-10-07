@@ -25,6 +25,8 @@ window.onAuthStateChanged(auth, (user) => {
             precoVendaInput.value = venda.toFixed(2);
         }
 
+        // Dispara o cálculo ao carregar a página e ao alterar os campos
+        window.addEventListener('DOMContentLoaded', calcularPrecoVenda);
         custoInput.addEventListener('input', calcularPrecoVenda);
         margemInput.addEventListener('input', calcularPrecoVenda);
 
