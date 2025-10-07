@@ -5,8 +5,8 @@
 // incluindo validações, localização, e interações com o Firebase.
 
 // Importa funções do Firebase (configurado em firebase-config.js)
-// Assumimos que o firebase-config.js exporta 'db' e 'auth'
-import { db, auth, getUserId, showMessage } from './firebase-config.js';
+// Assumimos que o firebase-config.js exporta 'db', 'auth', e 'getUserId'
+import { db, auth, getUserId } from './firebase-config.js'; 
 import { doc, setDoc, getDoc, collection, query, onSnapshot, orderBy, where, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // ====================================================================
@@ -288,27 +288,40 @@ const setupPerfilPage = () => {
  * Implementa a lógica para calcular o preço de venda em tempo real.
  */
 const setupCalculoPreco = () => {
+    // Adicionando log para confirmar que a função está sendo chamada
+    console.log("Calculo de preço de venda iniciado.");
+    
     const custoInput = document.getElementById('custoInput');
     const margemInput = document.getElementById('margemInput');
     const vendaInput = document.getElementById('precoVendaInput');
 
-    if (!custoInput || !margemInput || !vendaInput) return;
+    if (!custoInput || !margemInput || !vendaInput) {
+        console.error("Erro: Um ou mais campos (custo, margem, venda) não foram encontrados no HTML.");
+        return;
+    }
 
     const calculatePrice = () => {
-        const custo = parseFloat(custoInput.value) || 0;
-        const margem = parseFloat(margemInput.value) || 0;
+        // Usa parseFloat para garantir que os valores são numéricos, caso contrário, 0
+        const custo = parseFloat(custoInput.value.replace(',', '.')) || 0;
+        const margem = parseFloat(margemInput.value.replace(',', '.')) || 0;
 
         if (custo > 0 && margem >= 0) {
+            // Fórmula: Custo * (1 + Margem / 100)
             const precoVenda = custo * (1 + (margem / 100));
             // Formata para duas casas decimais
             vendaInput.value = precoVenda.toFixed(2); 
+            console.log(`Cálculo: Custo=${custo}, Margem=${margem}%, Venda=${precoVenda.toFixed(2)}`);
         } else {
             vendaInput.value = '0.00';
         }
     };
 
+    // Adiciona o listener para atualizar o preço em tempo real
     custoInput.addEventListener('input', calculatePrice);
     margemInput.addEventListener('input', calculatePrice);
+    
+    // Roda o cálculo uma vez na inicialização para pegar valores preenchidos
+    calculatePrice();
 };
 
 
@@ -318,7 +331,6 @@ const setupCalculoPreco = () => {
  */
 const setupScanner = () => {
     // TODO: Implementação real do QuaggaJS ou outra biblioteca de scanner
-    // Se o QuaggaJS fosse importado, a inicialização seria assim:
     /*
     if (typeof Quagga !== 'undefined') {
         Quagga.init({ 
@@ -352,8 +364,9 @@ const setupScanner = () => {
  * Listener para o salvamento de produtos no Firebase.
  */
 const setupCadastroProduto = () => {
-    setupCalculoPreco();
-    setupScanner(); // Configura scanner e cálculo
+    // CONFIRMADO: Chama a função de cálculo e scanner ao iniciar a página
+    setupCalculoPreco(); 
+    setupScanner(); 
     
     const cadastroForm = document.getElementById('cadastroForm');
     if (!cadastroForm) return;
@@ -365,6 +378,7 @@ const setupCadastroProduto = () => {
             codigoBarras: document.getElementById('codigoBarrasInput').value,
             nome: document.getElementById('nomeInput').value,
             marca: document.getElementById('marcaInput').value,
+            // Certificando que os valores salvos são numéricos
             custo: parseFloat(document.getElementById('custoInput').value),
             margem: parseFloat(document.getElementById('margemInput').value),
             precoVenda: parseFloat(document.getElementById('precoVendaInput').value),
@@ -401,10 +415,16 @@ const setupCadastroProduto = () => {
  * Configura o listener do Firestore para atualizar a tabela de produtos em tempo real.
  */
 const setupProdutosPage = () => {
+    // Retorna se a tabela não existir ou o usuário não estiver autenticado.
     const produtosTableBody = document.getElementById('produtosTableBody');
-    if (!produtosTableBody || !auth.currentUser) return; // Retorna se a tabela não existir ou o usuário não estiver autenticado.
+    if (!produtosTableBody || !auth.currentUser) {
+        console.warn("Tabela de produtos ou autenticação não prontas.");
+        return;
+    } 
     
     const userId = getUserId(auth);
+    // Nota: O uso de orderBy() sem um índice pode causar erros em produção.
+    // Para simplificar o desenvolvimento no Canvas, mantemos, mas o ideal é ordenar in-memory ou criar o índice.
     const produtosColRef = collection(db, 'artifacts', 'estoquere', 'users', userId, 'produtos');
     
     // Consulta: Ordena por data de cadastro descendente
@@ -466,17 +486,8 @@ window.onload = () => {
             setupCadastroProduto();
             break;
         case 'produtos.html':
-            // Esta função só deve ser chamada APÓS o Firebase estar pronto e o usuário logado (onAuthStateChanged)
-            // A chamada real deve ser feita dentro do 'firebase-config.js' após o login/auth.
-            // Para simulação, chamamos aqui:
-            setTimeout(() => {
-                if (auth.currentUser) {
-                    setupProdutosPage();
-                } else {
-                    // Simulação de espera de autenticação.
-                    console.warn("Aguardando autenticação para carregar produtos...");
-                }
-            }, 1000); 
+            // O carregamento de produtos é controlado pelo onAuthStateChanged no firebase-config.js.
+            console.log("Aguardando confirmação de autenticação para carregar 'produtos.html'...");
             break;
         case 'index.html':
         default:
