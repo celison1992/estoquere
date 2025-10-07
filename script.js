@@ -4,12 +4,9 @@
 
 // ====================================================================
 // Variáveis Globais (Definidas em firebase-config.js e utilizadas aqui)
-// As instâncias 'db' e 'auth', e 'userId' são populadas por 'firebase-config.js'
+// As instâncias 'db' e 'auth', e '__app_id' são populadas por 'firebase-config.js'
+// As funções do Firebase (collection, addDoc, onSnapshot, etc.) são importadas lá
 // ====================================================================
-
-// Importações necessárias do Firebase (assumindo que o firebase-config.js as exporta)
-// No ambiente de módulos, essas importações são automáticas, mas listamos aqui para clareza
-// import { db, auth, getUserId } from './firebase-config.js'; 
 
 // Funções utilitárias de formatação
 const formatCurrency = (value) => {
@@ -96,6 +93,9 @@ const displayMessage = (message, type = 'success', containerId = 'messageBox') =
             break;
     }
 
+    // Nota: O containerId é 'messageBox' para cadastro-produto e perfil, mas 'messageBoxProdutos'
+    // para a lista de produtos. O ajuste na chamada deve ser feito no código que chama displayMessage.
+    
     container.className = `mt-4 p-3 rounded-lg text-center ${bgColor} ${textColor} font-medium block`;
     container.textContent = message;
     container.classList.remove('hidden');
@@ -109,7 +109,7 @@ const displayMessage = (message, type = 'success', containerId = 'messageBox') =
 // LÓGICA DE CADASTRO DE PRODUTO (cadastro-produto.html)
 // ====================================================================
 
-// Simulação de Dados de Endereço (Para Dropdowns)
+// Simulação de Dados de Endereço (Para Dropdowns no perfil.html)
 const statesData = {
     'SP': ['São Paulo', 'Campinas', 'Guarulhos'],
     'RJ': ['Rio de Janeiro', 'Niterói', 'Duque de Caxias'],
@@ -135,7 +135,7 @@ function setupCalculoPreco() {
 
         if (custo < 0 || margem < 0) {
             precoVendaInput.value = '0,00';
-            displayMessage("Custo e Margem devem ser valores positivos.", 'warning', 'messageBoxProduto');
+            displayMessage("Custo e Margem devem ser valores positivos.", 'warning', 'messageBox');
             return;
         }
 
@@ -143,7 +143,8 @@ function setupCalculoPreco() {
         let precoVenda = custo * (1 + margem / 100);
 
         precoVendaInput.value = precoVenda.toFixed(2).replace('.', ',');
-        document.getElementById('messageBoxProduto')?.classList.add('hidden');
+        // Remove a mensagem se o cálculo for bem-sucedido
+        document.getElementById('messageBox')?.classList.add('hidden');
     };
 
     // Adiciona event listeners para cálculo em tempo real
@@ -163,12 +164,22 @@ function handleCadastroProduto(event) {
 
     // Verifica se o Firebase e o usuário estão disponíveis
     if (typeof db === 'undefined' || typeof auth === 'undefined' || !auth.currentUser) {
-        displayMessage("Erro: O Firebase não está inicializado ou o usuário não está autenticado.", 'error', 'messageBoxProduto');
+        displayMessage("Erro: O Firebase não está inicializado ou o usuário não está autenticado.", 'error', 'messageBox');
         return;
     }
+    
+    // Obtém a referência de funções do Firebase (assumindo que são globais após a importação)
+    const { collection, addDoc } = window; // Assumindo que as funções foram importadas para o escopo global
 
     const userId = auth.currentUser.uid;
     const form = event.target;
+
+    const precoVendaValue = form.precoVenda.value;
+    // Verifica se o cálculo foi feito e o campo não está vazio
+    if (!precoVendaValue || precoVendaValue === '0,00') {
+         displayMessage("O Preço de Venda não pode ser zero. Verifique Custo e Margem.", 'warning', 'messageBox');
+         return;
+    }
 
     const produtoData = {
         codigoBarras: form.codigoBarras.value.trim(),
@@ -176,7 +187,7 @@ function handleCadastroProduto(event) {
         descricao: form.productDescription.value.trim(),
         custo: parseFloat(form.custo.value.replace(',', '.')) || 0,
         margemLucro: parseFloat(form.margemLucro.value.replace(',', '.')) || 0,
-        precoVenda: parseFloat(form.precoVenda.value.replace(',', '.')) || 0,
+        precoVenda: parseFloat(precoVendaValue.replace(',', '.')) || 0,
         quantidade: parseInt(form.productQuantity.value, 10) || 0,
         createdAt: new Date(),
     };
@@ -186,7 +197,7 @@ function handleCadastroProduto(event) {
 
     addDoc(productCollection, produtoData)
         .then(() => {
-            displayMessage(`Produto "${produtoData.descricao}" salvo com sucesso!`, 'success', 'messageBoxProduto');
+            displayMessage(`Produto "${produtoData.descricao}" salvo com sucesso!`, 'success', 'messageBox');
             form.reset();
             // Garante que os campos de cálculo voltem ao valor inicial
             document.getElementById('precoVenda').value = '0,00';
@@ -195,7 +206,7 @@ function handleCadastroProduto(event) {
         })
         .catch((error) => {
             console.error("Erro ao salvar o produto:", error);
-            displayMessage("Erro ao salvar: " + error.message, 'error', 'messageBoxProduto');
+            displayMessage("Erro ao salvar: " + error.message, 'error', 'messageBox');
         });
 }
 
@@ -253,8 +264,6 @@ function setupGeolocation() {
         }
 
         navigator.geolocation.getCurrentPosition((position) => {
-            const { latitude, longitude } = position.coords;
-
             // SIMULAÇÃO: Converte (latitude, longitude) para Endereço
             const simulatedAddress = {
                 street: 'Rua das Flores',
@@ -279,6 +288,7 @@ function setupGeolocation() {
 
             displayMessage('Localização encontrada e preenchida!', 'success', 'messageBoxPerfil');
             locateButton.textContent = 'Localização Encontrada';
+            locateButton.disabled = false;
 
         }, (error) => {
             console.error("Erro de Geolocalização:", error);
@@ -293,24 +303,31 @@ function setupGeolocation() {
 function handlePerfilSubmit(event) {
     event.preventDefault();
 
+    const { doc, setDoc } = window; // Assumindo que as funções foram importadas para o escopo global
+
     const form = event.target;
     const documento = form.documento.value.replace(/[^\d]+/g, '');
     const docType = documento.length === 11 ? 'CPF' : (documento.length === 14 ? 'CNPJ' : null);
 
     const docErrorElement = document.getElementById('documentoError');
-    docErrorElement.textContent = '';
+    // Verifica se o elemento de erro existe antes de tentar manipulá-lo
+    if (docErrorElement) {
+        docErrorElement.textContent = '';
+    } else {
+        console.warn("Elemento #documentoError não encontrado.");
+    }
     
     // Validação de CPF/CNPJ
     if (docType === 'CPF' && !isValidCPF(documento)) {
-        docErrorElement.textContent = 'CPF inválido.';
+        if (docErrorElement) docErrorElement.textContent = 'CPF inválido.';
         return;
     }
     if (docType === 'CNPJ' && !isValidCNPJ(documento)) {
-        docErrorElement.textContent = 'CNPJ inválido.';
+        if (docErrorElement) docErrorElement.textContent = 'CNPJ inválido.';
         return;
     }
     if (!docType) {
-        docErrorElement.textContent = 'Documento deve ter 11 (CPF) ou 14 (CNPJ) dígitos.';
+        if (docErrorElement) docErrorElement.textContent = 'Documento deve ter 11 (CPF) ou 14 (CNPJ) dígitos.';
         return;
     }
     
@@ -321,6 +338,7 @@ function handlePerfilSubmit(event) {
     }
 
     const userId = auth.currentUser.uid;
+    // Caminho do documento: /artifacts/{appId}/users/{userId}/private/profile
     const userDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/private/profile`);
 
     const perfilData = {
@@ -364,9 +382,14 @@ function setupProdutosPage() {
         return;
     }
 
+    const { collection, onSnapshot } = window; // Assumindo que as funções foram importadas para o escopo global
+
     const userId = auth.currentUser.uid;
     const tableBody = document.getElementById('produtosTableBody');
     if (!tableBody) return;
+
+    // Define o ID do container de mensagens para a página de produtos
+    const messageContainerId = 'messageBoxProdutos'; 
 
     const productsCollection = collection(db, `artifacts/${__app_id}/users/${userId}/products`);
     
@@ -379,8 +402,16 @@ function setupProdutosPage() {
             return;
         }
 
+        // Ordenação manual dos dados (evitando problemas com orderBy no Firestore)
+        const products = [];
         snapshot.forEach(doc => {
-            const data = doc.data();
+            products.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Exemplo de ordenação (ex: por data de criação)
+        products.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+
+        products.forEach(data => {
             const row = tableBody.insertRow();
             row.className = 'border-b hover:bg-gray-50 transition duration-150';
 
@@ -397,12 +428,12 @@ function setupProdutosPage() {
             const editButton = document.createElement('button');
             editButton.textContent = 'Editar';
             editButton.className = 'text-blue-600 hover:text-blue-800 text-sm font-medium mr-2';
-            editButton.onclick = () => console.log('Editar produto:', doc.id);
+            editButton.onclick = () => console.log('Editar produto:', data.id);
 
             const deleteButton = document.createElement('button');
             deleteButton.textContent = 'Excluir';
             deleteButton.className = 'text-red-600 hover:text-red-800 text-sm font-medium';
-            deleteButton.onclick = () => handleDeleteProduto(doc.id, data.descricao);
+            deleteButton.onclick = () => handleDeleteProduto(data.id, data.descricao, messageContainerId);
             
             actionCell.appendChild(editButton);
             actionCell.appendChild(deleteButton);
@@ -415,20 +446,23 @@ function setupProdutosPage() {
 }
 
 // 5. Lógica de Exclusão de Produto
-function handleDeleteProduto(docId, descricao) {
-    // Usando confirm() temporariamente. Em apps reais, use um modal personalizado.
-    if (!confirm(`Tem certeza que deseja excluir o produto "${descricao}"?`)) return; 
+function handleDeleteProduto(docId, descricao, messageContainerId) {
+    
+    // IMPORTANTE: Substituir o window.confirm por um modal UI personalizado em ambiente de produção.
+    if (!window.confirm(`Tem certeza que deseja excluir o produto "${descricao}"?`)) return; 
+
+    const { doc, deleteDoc } = window; // Assumindo que as funções foram importadas para o escopo global
 
     const userId = auth.currentUser.uid;
     const docRef = doc(db, `artifacts/${__app_id}/users/${userId}/products/${docId}`);
 
     deleteDoc(docRef)
         .then(() => {
-            displayMessage(`Produto "${descricao}" excluído com sucesso!`, 'success', 'messageBoxProdutos');
+            displayMessage(`Produto "${descricao}" excluído com sucesso!`, 'success', messageContainerId);
         })
         .catch((error) => {
             console.error("Erro ao excluir o produto:", error);
-            displayMessage("Erro ao excluir o produto: " + error.message, 'error', 'messageBoxProdutos');
+            displayMessage("Erro ao excluir o produto: " + error.message, 'error', messageContainerId);
         });
 }
 
@@ -448,7 +482,11 @@ window.onload = function() {
         if (form) {
             form.addEventListener('submit', handleCadastroProduto);
             // Simulação de inicialização do QuaggaJS (scanner)
-            document.getElementById('barcode-result').textContent = 'Scanner de Código de Barras ativo (Simulado).';
+            // Esta linha deve ser substituída pela inicialização real do QuaggaJS, se necessário.
+            const barcodeResult = document.getElementById('barcode-result');
+            if(barcodeResult) {
+                barcodeResult.textContent = 'Scanner de Código de Barras ativo (Simulado).';
+            }
         }
     } 
     // 2. Lógica para Perfil da Loja
@@ -463,5 +501,6 @@ window.onload = function() {
     // 3. Lógica para Produtos Cadastrados
     else if (path === 'produtos.html') {
         console.log("Página de Produtos Carregada. A busca de dados será iniciada após a autenticação (via firebase-config.js).");
+        // A função setupProdutosPage será chamada pelo firebase-config.js
     }
 };
