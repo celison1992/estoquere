@@ -24,7 +24,7 @@ function setupCadastroProduto(user) {
         precoVendaInput.value = venda.toFixed(2);
     }
 
-    window.addEventListener('DOMContentLoaded', calcularPrecoVenda);
+    document.addEventListener('DOMContentLoaded', calcularPrecoVenda);
     custoInput.addEventListener('input', calcularPrecoVenda);
     margemInput.addEventListener('input', calcularPrecoVenda);
 
