@@ -1,87 +1,63 @@
-// Configuração do Firebase e Lógica de Autenticação (firebase-config.js)
+// firebase-config.js
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+// Importa os módulos necessários do Firebase
+import { initializeApp } from "firebase/app";
+import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
-let app;
-let db;
-let auth;
+// Configuração do Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyCTNWJfq0zcCzNSlnVDenKRy0xyvsEuCkI",
+  authDomain: "estoquere-789ee.firebaseapp.com",
+  projectId: "estoquere-789ee",
+  storageBucket: "estoquere-789ee.firebasestorage.app",
+  messagingSenderId: "774218509097",
+  appId: "1:774218509097:web:49483c7fd8ace7b94be538",
+  measurementId: "G-Y4BN386CM6"
+};
 
-/**
- * Desabilita ou habilita formulários críticos para evitar submissão
- * antes da autenticação completa.
- */
+// Inicializa Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Expor globalmente para uso em script.js
+window.db = db;
+window.auth = auth;
+
+// Controle de formulários
 function toggleFormState(enabled) {
-    const forms = [
-        document.getElementById('cadastroForm'),
-        document.getElementById('perfilForm')
-    ];
-    forms.forEach(form => {
-        if (form) {
-            Array.from(form.elements).forEach(element => {
-                element.disabled = !enabled;
-            });
-            console.log(enabled ? "Formulário habilitado." : "Formulário desabilitado.");
-        }
-    });
-}
-
-async function initFirebase() {
-    try {
-        if (Object.keys(firebaseConfig).length === 0) {
-            console.error("Erro: firebaseConfig está vazio.");
-            toggleFormState(true);
-            return;
-        }
-
-        if (typeof window.setLogLevel === 'function') {
-            window.setLogLevel('debug');
-        }
-
-        app = window.initializeApp(firebaseConfig);
-        db = window.getFirestore(app);
-        auth = window.getAuth(app);
-
-        window.db = db;
-        window.auth = auth;
-        window.__app_id = appId;
-
-        toggleFormState(false);
-
-        window.onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                console.log("Usuário autenticado:", user.uid);
-                toggleFormState(true);
-
-                const path = window.location.pathname.split('/').pop();
-                if (path === 'produtos.html' && typeof window.setupProdutosPage === 'function') {
-                    window.setupProdutosPage();
-                }
-            } else {
-                console.log("Nenhum usuário logado. Tentando login...");
-
-                try {
-                    if (initialAuthToken) {
-                        await window.signInWithCustomToken(auth, initialAuthToken);
-                        console.log("Login com token personalizado.");
-                    } else {
-                        await window.signInAnonymously(auth);
-                        console.log("Login anônimo.");
-                    }
-                } catch (loginError) {
-                    console.error("Erro no login:", loginError);
-                    toggleFormState(true);
-                }
-            }
-        });
-
-    } catch (error) {
-        console.error("Falha ao inicializar Firebase:", error);
-        toggleFormState(true);
+  const forms = [
+    document.getElementById('cadastroForm'),
+    document.getElementById('perfilForm')
+  ];
+  forms.forEach(form => {
+    if (form) {
+      Array.from(form.elements).forEach(el => el.disabled = !enabled);
     }
+  });
 }
 
-initFirebase();
+// Autenticação
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    console.log("Usuário autenticado:", user.uid);
+    toggleFormState(true);
 
-export { db, auth, appId };
+    const path = window.location.pathname.split('/').pop();
+    if (path === 'produtos.html' && typeof window.setupProdutosPage === 'function') {
+      window.setupProdutosPage();
+    }
+  } else {
+    console.log("Tentando login anônimo...");
+    try {
+      await signInAnonymously(auth);
+      console.log("Login anônimo bem-sucedido.");
+    } catch (error) {
+      console.error("Erro ao autenticar:", error);
+      toggleFormState(true);
+    }
+  }
+});
+
+export { db, auth };
