@@ -1,99 +1,92 @@
-// Configuração e Inicialização do Firebase
-// ----------------------------------------------------
-// Este arquivo trata da conexão inicial com o Firebase e autenticação.
+// Configuração do Firebase (firebase-config.js)
+// Este arquivo é responsável por inicializar o Firebase e garantir a autenticação do usuário.
 
+// IMPORTAÇÕES OBRIGATÓRIAS
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { doc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; // Importações adicionais para tipagem e referência
 
-// Importa a função de inicialização da página de produtos do script principal
-// Isso garante que a página 'produtos.html' carregue os dados somente após a autenticação.
-import { setupProdutosPage } from './script.js'; 
+// Variáveis globais para serem usadas em script.js
+export let db;
+export let auth;
+export let userId = null;
+export let isAuthReady = false;
 
-// Variáveis Globais (fornecidas pelo ambiente Canvas)
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'estoquere-default';
-// Tenta parsear a string de configuração ou usa um objeto vazio como fallback
-const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+// 1. Configurações e Inicialização
+// As variáveis __app_id, __firebase_config e __initial_auth_token são fornecidas pelo ambiente Canvas.
 
-// ====================================================================
-// 1. INICIALIZAÇÃO
-// ====================================================================
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Ativa o log de debug do Firestore (Útil durante o desenvolvimento)
+setLogLevel('debug');
 
-// Configura o nível de log para debug no Firestore (muito útil para verificação de regras de segurança)
-setLogLevel('Debug');
+try {
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+    
+    console.log("Firebase App e Firestore inicializados com sucesso.");
 
-/**
- * Retorna o ID do usuário. Prioriza o UID do usuário autenticado.
- * @param {object} authInstance A instância do Firebase Auth.
- * @returns {string} O ID único do usuário.
- */
-const getUserId = (authInstance) => {
-    // Usa o UID se o usuário estiver logado, senão gera um ID aleatório (para usuários anônimos/sessões não confirmadas)
-    return authInstance.currentUser?.uid || crypto.randomUUID();
-};
+} catch (error) {
+    console.error("Erro ao inicializar Firebase:", error);
+}
 
 /**
- * Função placeholder para 'showMessage'. O feedback visual é tratado
- * pela função 'displayMessage' dentro do 'script.js'.
+ * 2. Autenticação e Monitoramento do Estado do Usuário
+ * Garante que o usuário esteja logado (seja com token ou anonimamente)
+ * e que a lógica da aplicação só comece após o ID do usuário ser definido.
  */
-const showMessage = (msg, type) => {
-    console.log(`[FIREBASE STATUS ${type.toUpperCase()}]: ${msg}`);
-};
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        try {
+            
+            if (initialToken) {
+                // Tenta autenticar com o token personalizado do Canvas
+                await signInWithCustomToken(auth, initialToken);
+            } else {
+                // Faz login anônimo se o token não estiver disponível (ambiente local)
+                await signInAnonymously(auth);
+            }
+            // O listener onAuthStateChanged será chamado novamente com o novo 'user'
+            console.log("Autenticação inicial tentada.");
 
-// ====================================================================
-// 2. AUTENTICAÇÃO
-// ====================================================================
-
-/**
- * Tenta autenticar o usuário usando o token personalizado (ambiente Canvas) ou anonimamente.
- */
-const authenticateUser = async () => {
-    try {
-        // Define a persistência da sessão para manter o usuário logado
-        await setPersistence(auth, browserSessionPersistence);
-
-        if (initialAuthToken) {
-            // Tenta logar com o token fornecido pelo ambiente Canvas
-            await signInWithCustomToken(auth, initialAuthToken);
-            console.log("Autenticação com token personalizado realizada.");
-        } else {
-            // Se não houver token, loga anonimamente
-            await signInAnonymously(auth);
-            console.warn("Nenhum token fornecido. Autenticação anônima realizada.");
-        }
-    } catch (error) {
-        console.error("Erro na autenticação:", error);
-    }
-};
-
-// ====================================================================
-// 3. MONITORAMENTO DE ESTADO
-// ====================================================================
-
-// Monitora o estado de autenticação para carregar dados protegidos
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        console.log(`Usuário autenticado. UID: ${user.uid}`);
-        
-        // Verifica se a página atual é 'produtos.html' para carregar os dados
-        const path = window.location.pathname.split('/').pop();
-        if (path === 'produtos.html') {
-            // Chama a função de carregamento de produtos somente após a autenticação ser confirmada
-            setupProdutosPage();
+        } catch (error) {
+            console.error("Erro na autenticação inicial:", error);
         }
     } else {
-        console.log("Nenhum usuário logado. Apenas o modo anônimo está ativo.");
+        // Usuário logado (ou anônimo)
+        userId = user.uid;
+        isAuthReady = true;
+        console.log(`Usuário autenticado. UID: ${userId}`);
+
+        // Chama funções de inicialização da página principal (script.js) APÓS a autenticação
+        // As funções de setup de páginas (produtos, perfil) são definidas em script.js e só podem
+        // rodar após o auth.currentUser estar disponível.
+        if (typeof setupProdutosPage === 'function') {
+            setupProdutosPage();
+        }
+        if (typeof loadUserProfile === 'function') {
+            loadUserProfile();
+        }
     }
 });
 
-// Inicia o processo de autenticação logo no carregamento
-authenticateUser();
+/**
+ * Função utilitária para obter o ID do usuário.
+ * Usada por outras partes do script.js para construir caminhos no Firestore.
+ * @returns {string | null} O UID do usuário ou null.
+ */
+export function getUserId() {
+    return userId;
+}
 
-
-// Exporta instâncias e utilitários para uso no script.js
-export { db, auth, getUserId, showMessage };
+/**
+ * Função utilitária para obter o ID da Aplicação.
+ * @returns {string} O ID da aplicação.
+ */
+export function getAppId() {
+    return appId;
+}
