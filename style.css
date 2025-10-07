@@ -1,0 +1,92 @@
+/* * EstoquEré - Estilos Globais
+ * ----------------------------------------------------
+ * Este arquivo define a aparência de todas as páginas (index.html,
+ * cadastro-produto.html, perfil.html, produtos.html) que o importam.
+ * * Paleta de Cores (Definidas como Variáveis CSS):
+ * - Primária (Azul Petróleo): #2C3E50
+ * - Secundária (Cinza Claro): #ECF0F1 (Fundo principal)
+ * - Destaque (Verde Suave): #27AE60
+ * - Texto (Cinza Escuro): #34495E
+ */
+
+/* 1. Definição das Variáveis de Cor */
+:root {
+    --color-primary: #2C3E50;    /* Azul Petróleo */
+    --color-secondary: #ECF0F1;  /* Cinza Claro */
+    --color-highlight: #27AE60;  /* Verde Suave (Destaque) */
+    --color-text-dark: #34495E;  /* Cinza Escuro */
+    --color-text-light: #F0F0F0; /* Para textos em fundos escuros */
+}
+
+/* 2. Estilos Globais e Reset */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-secondary);
+    color: var(--color-text-dark);
+    line-height: 1.6;
+}
+
+/* 3. Ajustes de Layout e Containers */
+.main-container {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    /* Garante a responsividade básica do padding para mobile */
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* 4. Cores e Sobrescritas (para alinhar o Tailwind com a paleta) */
+
+/* Navbar e Header (Primária: Azul Petróleo) */
+.bg-indigo-700, .bg-indigo-600 {
+    background-color: var(--color-primary) !important;
+}
+.text-white {
+    color: var(--color-text-light) !important;
+}
+.hover\:text-indigo-200:hover {
+    color: #AAB7B8 !important; /* Um tom mais claro do Azul Petróleo */
+}
+
+/* Botões de Destaque/Ação (Highlight: Verde Suave) */
+/* Sobrescreve botões de submit e links importantes */
+.bg-indigo-600[type="submit"], 
+.bg-indigo-700:hover,
+.text-indigo-700 {
+    background-color: var(--color-highlight) !important;
+    color: white !important;
+}
+
+.hover\:bg-indigo-700:hover {
+    background-color: #219d55 !important; /* Destaque levemente mais escuro ao passar o mouse */
+}
+
+/* Botão de Localização (Azul Padrão, mantendo a distinção) */
+.bg-blue-500 {
+    background-color: #3498DB !important; /* Azul para Ações Secundárias/Informativas */
+}
+
+/* Estilos específicos para o scanner de código de barras */
+#scanner-container {
+    width: 100%;
+    height: 300px;
+    background-color: var(--color-text-dark);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Feedback do Scanner */
+#scanner-feedback {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    text-align: center;
+    font-size: 0.9rem;
+}
