@@ -1,19 +1,13 @@
 // script.js
 
-import { db, auth } from './firebase-config.js';
-import {
-    collection,
-    addDoc,
-    onSnapshot,
-    query,
-    orderBy
-} from 'firebase/firestore';
+// Remova imports do Firebase aqui.
 
 function isFirebaseReady() {
+    // Apenas verifica se as variáveis globais foram definidas
     return typeof db !== 'undefined' && typeof auth !== 'undefined';
 }
 
-// EXPORTA a função para que firebase-config.js possa chamá-la
+// Exporta a função para que firebase-config.js possa chamá-la
 export function setupCadastroProduto(user) { 
     const form = document.getElementById('cadastroForm');
     const custoInput = document.getElementById('custoInput');
@@ -34,7 +28,6 @@ export function setupCadastroProduto(user) {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // O 'user' agora vem garantido pela chamada do firebase-config.js
         if (!isFirebaseReady() || !user) { 
             alert("Erro: O Firebase não está inicializado ou o usuário não está autenticado.");
             return;
@@ -50,7 +43,9 @@ export function setupCadastroProduto(user) {
 
         try {
             console.log("Salvando produto...");
-            const docRef = await addDoc(collection(db, 'produtos'), {
+            
+            // OPERAÇÃO DE SALVAMENTO CORRIGIDA USANDO SINTAXE GLOBAL (V8/V9 CDN)
+            const docRef = await firebase.firestore().collection('produtos').add({ 
                 codigo,
                 marca,
                 modelo,
@@ -58,9 +53,10 @@ export function setupCadastroProduto(user) {
                 margem,
                 venda,
                 quantidade,
-                criadoPor: user.uid, // O user.uid agora está acessível
+                criadoPor: user.uid, 
                 criadoEm: new Date()
             });
+            
             console.log("Produto salvo com ID:", docRef.id);
 
             const box = document.getElementById('messageBox');
@@ -69,26 +65,25 @@ export function setupCadastroProduto(user) {
             box.classList.add('bg-green-100', 'text-green-700');
             form.reset();
             precoVendaInput.value = '0.00';
-            calcularPrecoVenda(); // Recalcula após o reset
+            calcularPrecoVenda();
         } catch (error) {
             console.error("Erro ao salvar produto:", error);
             const box = document.getElementById('messageBox');
-            box.textContent = '❌ Erro ao salvar produto.';
+            box.textContent = '❌ Erro ao salvar produto. (Verifique o console e as regras do Firebase!)';
             box.classList.remove('hidden', 'bg-green-100', 'text-green-700');
             box.classList.add('bg-red-100', 'text-red-700');
         }
     });
 }
 
-// Esta função permanece inalterada
 window.setupProdutosPage = function () {
     const tbody = document.getElementById('productsTableBody');
     const loadingStatus = document.getElementById('loadingStatus');
 
-    const produtosRef = collection(db, 'produtos');
-    const produtosQuery = query(produtosRef, orderBy('criadoEm', 'desc'));
+    // LISTAGEM CORRIGIDA USANDO SINTAXE GLOBAL (V8/V9 CDN)
+    const produtosQuery = firebase.firestore().collection('produtos').orderBy('criadoEm', 'desc');
 
-    onSnapshot(produtosQuery, (snapshot) => {
+    produtosQuery.onSnapshot((snapshot) => {
         tbody.innerHTML = '';
 
         if (snapshot.empty) {
@@ -119,5 +114,3 @@ window.setupProdutosPage = function () {
         loadingStatus.textContent = `Total de produtos: ${snapshot.size}`;
     });
 };
-
-// O bloco onAuthStateChanged duplicado foi REMOVIDO daqui.
