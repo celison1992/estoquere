@@ -74,6 +74,24 @@
             <div class="space-y-4">
                 <label class="block text-sm font-medium text-gray-700">Endereço</label>
                 
+                <!-- ESTADO E CIDADE (AGORA DROPDOWNS) -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-1">
+                        <label for="estado" class="block text-xs font-medium text-gray-500 mb-1">Estado (UF)</label>
+                        <select id="estado" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm bg-white">
+                            <option value="">Selecione o Estado</option>
+                            <!-- Opções de estado serão carregadas via JS -->
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label for="cidade" class="block text-xs font-medium text-gray-500 mb-1">Cidade</label>
+                        <select id="cidade" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm bg-white" disabled>
+                            <option value="">Selecione a Cidade</option>
+                            <!-- Opções de cidade serão carregadas via JS -->
+                        </select>
+                    </div>
+                </div>
+                
                 <!-- Rua e Botão de Localização -->
                 <div class="flex space-x-2 items-end">
                     <div class="flex-grow">
