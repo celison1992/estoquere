@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EstoquEré | Perfil da Loja</title>
+    <!-- Carregamento do Tailwind CSS para estilo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Link para o arquivo de estilos externo -->
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Navbar com link de volta -->
+    <header class="fixed top-0 left-0 w-full bg-indigo-700 shadow-lg z-10">
+        <nav class="container mx-auto px-4 h-16 flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-white">Configuração do Perfil</h1>
+            <a href="index.html" class="text-white hover:text-indigo-200 transition duration-150 flex items-center">
+                <span class="mr-1">&larr;</span> Voltar ao Menu
+            </a>
+        </nav>
+    </header>
+
+    <main class="flex-grow main-container mt-20 p-8 bg-white rounded-xl shadow-xl">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Dados e Identidade do Estabelecimento</h2>
+        
+        <form id="perfilForm" class="space-y-6">
+
+            <!-- Seção de Logo -->
+            <div class="border p-4 rounded-lg bg-gray-50">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Logo da Loja</label>
+                <div class="flex items-center space-x-4">
+                    <!-- Visualização da Logo -->
+                    <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-inner border-2 border-indigo-300">
+                        <img id="logoPreview" src="https://placehold.co/80x80/293a80/ffffff?text=LOGO" alt="Pré-visualização da Logo" class="w-full h-full object-cover">
+                    </div>
+                    <!-- Input de Arquivo -->
+                    <input type="file" id="logoInput" accept="image/*" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Envie o logo da sua loja para ser usado em notas fiscais e relatórios.</p>
+            </div>
+            
+            <!-- Nome do Estabelecimento e Proprietário -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="nomeEstabelecimento" class="block text-sm font-medium text-gray-700 mb-1">Nome do Estabelecimento</label>
+                    <input type="text" id="nomeEstabelecimento" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" placeholder="Ex: EstoquEré Vendas">
+                </div>
+                <div>
+                    <label for="nomeProprietario" class="block text-sm font-medium text-gray-700 mb-1">Nome do Proprietário</label>
+                    <input type="text" id="nomeProprietario" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" placeholder="Seu Nome">
+                </div>
+            </div>
+
+            <!-- Documento e Telefone -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="documento" class="block text-sm font-medium text-gray-700 mb-1">CPF / CNPJ (apenas números)</label>
+                    <input type="number" id="documento" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm font-mono" placeholder="Ex: 12345678900">
+                </div>
+                <div>
+                    <label for="telefone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                    <input type="tel" id="telefone" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" placeholder="(99) 99999-9999">
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                <input type="email" id="email" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" placeholder="contato@suaempresa.com">
+            </div>
+
+            <!-- Seção de Endereço com Localização -->
+            <div class="space-y-4">
+                <label class="block text-sm font-medium text-gray-700">Endereço</label>
+                
+                <!-- Rua e Botão de Localização -->
+                <div class="flex space-x-2 items-end">
+                    <div class="flex-grow">
+                        <label for="rua" class="block text-xs font-medium text-gray-500 mb-1">Rua (Logradouro)</label>
+                        <input type="text" id="rua" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" placeholder="Rua, Avenida, etc.">
+                    </div>
+                    <button type="button" id="locateButton" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-150 flex items-center justify-center flex-shrink-0" title="Obter Endereço pela Localização Atual">
+                        <!-- Ícone de Ponto de Localização (Lucide Icons) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-locate"><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><circle cx="12" cy="12" r="7"/></svg>
+                    </button>
+                </div>
+
+                <!-- Número e Bairro -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-1">
+                        <label for="numero" class="block text-xs font-medium text-gray-500 mb-1">Número</label>
+                        <input type="text" id="numero" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" placeholder="Ex: 123">
+                    </div>
+                    <div class="col-span-2">
+                        <label for="bairro" class="block text-xs font-medium text-gray-500 mb-1">Bairro</label>
+                        <input type="text" id="bairro" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm" placeholder="Seu bairro">
+                    </div>
+                </div>
+
+                <p id="locationStatus" class="text-xs mt-1 text-gray-500 hidden">Status da localização.</p>
+            </div>
+
+
+            <!-- Botão de Salvar -->
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition duration-200 shadow-md mt-6">
+                💾 Salvar Configurações
+            </button>
+        </form>
+
+        <div id="messageBox" class="mt-4 p-4 rounded-lg text-center hidden"></div>
+    </main>
+    
+    <!-- Rodapé Simples -->
+    <footer class="bg-gray-800 text-white py-4 mt-auto">
+        <div class="container mx-auto text-center text-sm">
+            &copy; 2025 EstoquEré. Todos os direitos reservados.
+        </div>
+    </footer>
+
+    <!-- Chamadas de scripts -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
