@@ -1,13 +1,14 @@
 // script.js
 
-// Remova imports do Firebase aqui.
+// NÃO USAMOS imports do Firebase aqui. O 'db' e 'auth' são acessados
+// globalmente (via window.db e window.auth) ou diretamente pelo objeto 'firebase'.
 
 function isFirebaseReady() {
-    // Apenas verifica se as variáveis globais foram definidas
+    // Verifica se as variáveis globais foram definidas em firebase-config.js
     return typeof db !== 'undefined' && typeof auth !== 'undefined';
 }
 
-// Exporta a função para que firebase-config.js possa chamá-la
+// Exporta a função para que firebase-config.js possa chamá-la após a autenticação
 export function setupCadastroProduto(user) { 
     const form = document.getElementById('cadastroForm');
     const custoInput = document.getElementById('custoInput');
@@ -21,7 +22,8 @@ export function setupCadastroProduto(user) {
         precoVendaInput.value = venda.toFixed(2);
     }
 
-    document.addEventListener('DOMContentLoaded', calcularPrecoVenda);
+    // Inicializa o cálculo na abertura, já que setupCadastroProduto é chamado após DOMContentLoaded
+    calcularPrecoVenda(); 
     custoInput.addEventListener('input', calcularPrecoVenda);
     margemInput.addEventListener('input', calcularPrecoVenda);
 
@@ -44,7 +46,7 @@ export function setupCadastroProduto(user) {
         try {
             console.log("Salvando produto...");
             
-            // OPERAÇÃO DE SALVAMENTO CORRIGIDA USANDO SINTAXE GLOBAL (V8/V9 CDN)
+            // OPERAÇÃO DE SALVAMENTO: Usando a sintaxe global (v8-compat) do Firestore
             const docRef = await firebase.firestore().collection('produtos').add({ 
                 codigo,
                 marca,
@@ -76,11 +78,12 @@ export function setupCadastroProduto(user) {
     });
 }
 
+// Configuração da Página de Produtos (Listagem)
 window.setupProdutosPage = function () {
     const tbody = document.getElementById('productsTableBody');
     const loadingStatus = document.getElementById('loadingStatus');
 
-    // LISTAGEM CORRIGIDA USANDO SINTAXE GLOBAL (V8/V9 CDN)
+    // LISTAGEM: Usando a sintaxe global (v8-compat) do Firestore
     const produtosQuery = firebase.firestore().collection('produtos').orderBy('criadoEm', 'desc');
 
     produtosQuery.onSnapshot((snapshot) => {
