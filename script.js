@@ -1,3 +1,5 @@
+// script.js
+
 import { db, auth } from './firebase-config.js';
 import {
     collection,
@@ -11,7 +13,8 @@ function isFirebaseReady() {
     return typeof db !== 'undefined' && typeof auth !== 'undefined';
 }
 
-function setupCadastroProduto(user) {
+// EXPORTA a função para que firebase-config.js possa chamá-la
+export function setupCadastroProduto(user) { 
     const form = document.getElementById('cadastroForm');
     const custoInput = document.getElementById('custoInput');
     const margemInput = document.getElementById('margemInput');
@@ -31,7 +34,8 @@ function setupCadastroProduto(user) {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        if (!isFirebaseReady() || !user) {
+        // O 'user' agora vem garantido pela chamada do firebase-config.js
+        if (!isFirebaseReady() || !user) { 
             alert("Erro: O Firebase não está inicializado ou o usuário não está autenticado.");
             return;
         }
@@ -54,27 +58,29 @@ function setupCadastroProduto(user) {
                 margem,
                 venda,
                 quantidade,
-                criadoPor: user.uid,
+                criadoPor: user.uid, // O user.uid agora está acessível
                 criadoEm: new Date()
             });
             console.log("Produto salvo com ID:", docRef.id);
 
             const box = document.getElementById('messageBox');
             box.textContent = '✅ Produto cadastrado com sucesso!';
-            box.classList.remove('hidden');
+            box.classList.remove('hidden', 'bg-red-100', 'text-red-700');
             box.classList.add('bg-green-100', 'text-green-700');
             form.reset();
             precoVendaInput.value = '0.00';
+            calcularPrecoVenda(); // Recalcula após o reset
         } catch (error) {
             console.error("Erro ao salvar produto:", error);
             const box = document.getElementById('messageBox');
             box.textContent = '❌ Erro ao salvar produto.';
-            box.classList.remove('hidden');
+            box.classList.remove('hidden', 'bg-green-100', 'text-green-700');
             box.classList.add('bg-red-100', 'text-red-700');
         }
     });
 }
 
+// Esta função permanece inalterada
 window.setupProdutosPage = function () {
     const tbody = document.getElementById('productsTableBody');
     const loadingStatus = document.getElementById('loadingStatus');
@@ -114,14 +120,4 @@ window.setupProdutosPage = function () {
     });
 };
 
-window.onAuthStateChanged(auth, (user) => {
-    const path = window.location.pathname.split('/').pop();
-
-    if (user && path === 'cadastro-produto.html') {
-        setupCadastroProduto(user);
-    }
-
-    if (user && path === 'produtos.html' && typeof window.setupProdutosPage === 'function') {
-        window.setupProdutosPage();
-    }
-});
+// O bloco onAuthStateChanged duplicado foi REMOVIDO daqui.
