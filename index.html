@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EstoquEré | Menu Principal</title>
-    <!-- Carregamento do Tailwind CSS para estilo -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Link para o arquivo de estilos externo -->
     <link rel="stylesheet" href="style.css"> 
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Navbar simples -->
     <header class="fixed top-0 left-0 w-full bg-indigo-700 shadow-lg z-10">
         <nav class="container mx-auto px-4 h-16 flex items-center justify-between">
             <h1 class="text-2xl font-bold text-white">EstoquEré</h1>
@@ -19,28 +16,24 @@
         </nav>
     </header>
 
-    <!-- Conteúdo Principal -->
     <main class="flex-grow main-container mt-20 p-8">
         <h2 class="text-3xl font-extrabold text-gray-900 mb-8 border-b pb-2">Central de Navegação</h2>
         <p class="text-lg text-gray-600 mb-10">Selecione uma opção para gerenciar seu estoque e configurações.</p>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            <!-- Opção: Cadastrar Produto -->
+             
             <a href="cadastro-produto.html" class="bg-green-600 hover:bg-green-700 text-white p-6 rounded-xl shadow-lg transition duration-300 transform hover:scale-[1.02] text-center flex flex-col items-center justify-center h-40">
                 <span class="text-4xl mb-2">📦</span>
                 <h3 class="text-xl font-bold">Cadastrar Novo Item</h3>
                 <p class="text-sm text-green-100">Adicione produtos com scanner de código de barras.</p>
             </a>
 
-            <!-- Opção: Ver Itens Cadastrados (Produtos) -->
             <a href="produtos.html" class="bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-xl shadow-lg transition duration-300 transform hover:scale-[1.02] text-center flex flex-col items-center justify-center h-40">
                 <span class="text-4xl mb-2">📋</span>
                 <h3 class="text-xl font-bold">Ver Produtos em Estoque</h3>
                 <p class="text-sm text-blue-100">Lista e gerencia o estoque atual.</p>
             </a>
-            
-            <!-- Opção: Perfil da Loja -->
+             
             <a href="perfil.html" class="bg-indigo-600 hover:bg-indigo-700 text-white p-6 rounded-xl shadow-lg transition duration-300 transform hover:scale-[1.02] text-center flex flex-col items-center justify-center h-40">
                 <span class="text-4xl mb-2">🏢</span>
                 <h3 class="text-xl font-bold">Configurar Loja</h3>
@@ -49,8 +42,11 @@
         </div>
     </main>
     
-    <!-- Chamadas de scripts (Módulos) -->
-    <script type="module" src="firebase-config.js"></script>
-    <script type="module" src="script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
