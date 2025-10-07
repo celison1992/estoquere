@@ -1,42 +1,48 @@
 // firebase-config.js
 
-// REMOVA ESTAS LINHAS:
-// import { initializeApp } from "firebase/app";
-// import { getAuth, onAuthStateChanged, signInAnonymously } from "firebase/auth";
-// import { getFirestore } from "firebase/firestore";
-
-// Apenas importe o script local que você precisa
+// Importação LOCAL para a função do script.js
 import { setupCadastroProduto } from "./script.js"; 
 
 // Configuração do Firebase
 const firebaseConfig = {
-    // ... (restante da configuração)
+    apiKey: "AIzaSyCTNWJfq0zcCzNSlnVDenKRy0xyvsEuCkI",
+    authDomain: "estoquere-789ee.firebaseapp.com",
+    projectId: "estoquere-789ee",
+    storageBucket: "estoquere-789ee.firebasestorage.app",
+    messagingSenderId: "774218509097",
+    appId: "1:774218509097:web:49483c7fd8ace7b94be538",
+    measurementId: "G-Y4BN386CM6"
 };
 
-// Inicializa Firebase usando as funções globais
-const app = firebase.initializeApp(firebaseConfig); // Use firebase.initializeApp
-const db = firebase.firestore(app); // Use firebase.firestore
-const auth = firebase.auth(app); // Use firebase.auth
+// Inicializa Firebase usando o objeto global 'firebase'
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore(app); // Associa o Firestore
+const auth = firebase.auth(app);     // Associa a Autenticação
 
-// Expor globalmente (já estava correto)
+// Expor globalmente para uso em script.js (agora desnecessário, mas mantido)
 window.db = db;
 window.auth = auth;
 
-// Controle de formulários (permanece igual)
+// Controle de formulários
 function toggleFormState(enabled) {
-    // ...
+    const forms = [document.getElementById('cadastroForm')];
+    forms.forEach(form => {
+        if (form) {
+            Array.from(form.elements).forEach(el => el.disabled = !enabled);
+        }
+    });
 }
 
-// Autenticação (Use as funções globais)
-firebase.auth().onAuthStateChanged(auth, async (user) => { // Use firebase.auth().onAuthStateChanged
-    const path = window.location.pathname.split('/').pop(); 
+// Autenticação (Usando funções globais)
+firebase.auth().onAuthStateChanged(auth, async (user) => {
+    const path = window.location.pathname.split('/').pop();
 
     if (user) {
         console.log("Usuário autenticado:", user.uid);
         toggleFormState(true);
 
         if (path === 'cadastro-produto.html') {
-            setupCadastroProduto(user); 
+            setupCadastroProduto(user);
         }
 
         if (path === 'produtos.html' && typeof window.setupProdutosPage === 'function') {
@@ -45,7 +51,7 @@ firebase.auth().onAuthStateChanged(auth, async (user) => { // Use firebase.auth(
     } else {
         console.log("Tentando login anônimo...");
         try {
-            await firebase.auth().signInAnonymously(auth); // Use firebase.auth().signInAnonymously
+            await firebase.auth().signInAnonymously(auth);
             console.log("Login anônimo bem-sucedido.");
         } catch (error) {
             console.error("Erro ao autenticar:", error);
@@ -54,7 +60,5 @@ firebase.auth().onAuthStateChanged(auth, async (user) => { // Use firebase.auth(
     }
 });
 
-// REMOVA O EXPORT para evitar conflitos de módulo, 
-// pois agora as variáveis já são acessadas globalmente (window.db, window.auth)
-
-// export { db, auth }; // <-- REMOVA ISTO
+// Removemos a exportação para evitar conflitos de módulo
+// export { db, auth };
