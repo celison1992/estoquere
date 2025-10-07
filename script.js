@@ -1,12 +1,8 @@
 // Lógica Principal da Aplicação (script.js)
 // Este script lida com todas as interações de front-end, validações e comunicação com o Firebase.
-// Inclui correção para salvamento de produto, cálculo de margem e listagem em tempo real.
 
-// ====================================================================
-// Variáveis Globais (Definidas em firebase-config.js e utilizadas aqui)
-// As instâncias 'db' e 'auth', e '__app_id' são populadas por 'firebase-config.js'
-// As funções do Firebase (collection, addDoc, onSnapshot, etc.) são importadas lá
-// ====================================================================
+// O ambiente do Canvas injeta as variáveis globais: __app_id, db (Firestore) e auth (Auth).
+// As funções do Firestore (collection, addDoc, onSnapshot, etc.) também são injetadas globalmente.
 
 // Funções utilitárias de formatação
 const formatCurrency = (value) => {
@@ -93,8 +89,7 @@ const displayMessage = (message, type = 'success', containerId = 'messageBox') =
             break;
     }
 
-    // Nota: O containerId é 'messageBox' para cadastro-produto e perfil, mas 'messageBoxProdutos'
-    // para a lista de produtos. O ajuste na chamada deve ser feito no código que chama displayMessage.
+    // O containerId deve ser ajustado para a página (messageBox, messageBoxPerfil, messageBoxProdutos)
     
     container.className = `mt-4 p-3 rounded-lg text-center ${bgColor} ${textColor} font-medium block`;
     container.textContent = message;
@@ -109,7 +104,7 @@ const displayMessage = (message, type = 'success', containerId = 'messageBox') =
 // LÓGICA DE CADASTRO DE PRODUTO (cadastro-produto.html)
 // ====================================================================
 
-// Simulação de Dados de Endereço (Para Dropdowns no perfil.html)
+// Simulação de Dados de Endereço (Usado no perfil.html)
 const statesData = {
     'SP': ['São Paulo', 'Campinas', 'Guarulhos'],
     'RJ': ['Rio de Janeiro', 'Niterói', 'Duque de Caxias'],
@@ -162,20 +157,20 @@ function setupCalculoPreco() {
 function handleCadastroProduto(event) {
     event.preventDefault();
 
-    // Verifica se o Firebase e o usuário estão disponíveis
+    // Verifica se o Firebase e o usuário estão disponíveis (Verificação extra de segurança)
     if (typeof db === 'undefined' || typeof auth === 'undefined' || !auth.currentUser) {
         displayMessage("Erro: O Firebase não está inicializado ou o usuário não está autenticado.", 'error', 'messageBox');
         return;
     }
     
-    // Obtém a referência de funções do Firebase (assumindo que são globais após a importação)
-    const { collection, addDoc } = window; // Assumindo que as funções foram importadas para o escopo global
+    // Obtém as funções do Firebase do escopo global (injetação do firebase-config.js)
+    const { collection, addDoc } = window; 
 
     const userId = auth.currentUser.uid;
     const form = event.target;
 
     const precoVendaValue = form.precoVenda.value;
-    // Verifica se o cálculo foi feito e o campo não está vazio
+    // Validação de Preço de Venda
     if (!precoVendaValue || precoVendaValue === '0,00') {
          displayMessage("O Preço de Venda não pode ser zero. Verifique Custo e Margem.", 'warning', 'messageBox');
          return;
@@ -265,6 +260,7 @@ function setupGeolocation() {
 
         navigator.geolocation.getCurrentPosition((position) => {
             // SIMULAÇÃO: Converte (latitude, longitude) para Endereço
+            // Em uma aplicação real, usaria-se uma API de geocodificação reversa
             const simulatedAddress = {
                 street: 'Rua das Flores',
                 number: '123',
@@ -303,18 +299,16 @@ function setupGeolocation() {
 function handlePerfilSubmit(event) {
     event.preventDefault();
 
-    const { doc, setDoc } = window; // Assumindo que as funções foram importadas para o escopo global
+    // Obtém as funções do Firebase do escopo global (injetação do firebase-config.js)
+    const { doc, setDoc } = window; 
 
     const form = event.target;
     const documento = form.documento.value.replace(/[^\d]+/g, '');
     const docType = documento.length === 11 ? 'CPF' : (documento.length === 14 ? 'CNPJ' : null);
 
     const docErrorElement = document.getElementById('documentoError');
-    // Verifica se o elemento de erro existe antes de tentar manipulá-lo
     if (docErrorElement) {
         docErrorElement.textContent = '';
-    } else {
-        console.warn("Elemento #documentoError não encontrado.");
     }
     
     // Validação de CPF/CNPJ
@@ -331,7 +325,7 @@ function handlePerfilSubmit(event) {
         return;
     }
     
-    // Processo de Salvamento no Firebase (Salva dados privados do perfil)
+    // Processo de Salvamento no Firebase
     if (typeof db === 'undefined' || typeof auth === 'undefined' || !auth.currentUser) {
         displayMessage("Erro: O Firebase não está inicializado ou o usuário não está autenticado.", 'error', 'messageBoxPerfil');
         return;
@@ -354,7 +348,6 @@ function handlePerfilSubmit(event) {
             numero: form.numero.value.trim(),
             bairro: form.bairro.value.trim(),
         },
-        // logoUrl: 'URL_DO_LOGO_APÓS_UPLOAD', // Adicionar lógica de upload
         updatedAt: new Date()
     };
 
@@ -382,7 +375,8 @@ function setupProdutosPage() {
         return;
     }
 
-    const { collection, onSnapshot } = window; // Assumindo que as funções foram importadas para o escopo global
+    // Obtém as funções do Firebase do escopo global
+    const { collection, onSnapshot, doc, deleteDoc } = window; 
 
     const userId = auth.currentUser.uid;
     const tableBody = document.getElementById('produtosTableBody');
@@ -408,7 +402,7 @@ function setupProdutosPage() {
             products.push({ id: doc.id, ...doc.data() });
         });
         
-        // Exemplo de ordenação (ex: por data de criação)
+        // Ordena por data de criação decrescente
         products.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
 
         products.forEach(data => {
@@ -448,10 +442,10 @@ function setupProdutosPage() {
 // 5. Lógica de Exclusão de Produto
 function handleDeleteProduto(docId, descricao, messageContainerId) {
     
-    // IMPORTANTE: Substituir o window.confirm por um modal UI personalizado em ambiente de produção.
+    // IMPORTANTE: Use um modal UI personalizado em ambiente de produção (Não use window.confirm)
     if (!window.confirm(`Tem certeza que deseja excluir o produto "${descricao}"?`)) return; 
 
-    const { doc, deleteDoc } = window; // Assumindo que as funções foram importadas para o escopo global
+    const { doc, deleteDoc } = window;
 
     const userId = auth.currentUser.uid;
     const docRef = doc(db, `artifacts/${__app_id}/users/${userId}/products/${docId}`);
@@ -482,7 +476,6 @@ window.onload = function() {
         if (form) {
             form.addEventListener('submit', handleCadastroProduto);
             // Simulação de inicialização do QuaggaJS (scanner)
-            // Esta linha deve ser substituída pela inicialização real do QuaggaJS, se necessário.
             const barcodeResult = document.getElementById('barcode-result');
             if(barcodeResult) {
                 barcodeResult.textContent = 'Scanner de Código de Barras ativo (Simulado).';
@@ -500,7 +493,7 @@ window.onload = function() {
     } 
     // 3. Lógica para Produtos Cadastrados
     else if (path === 'produtos.html') {
-        console.log("Página de Produtos Carregada. A busca de dados será iniciada após a autenticação (via firebase-config.js).");
-        // A função setupProdutosPage será chamada pelo firebase-config.js
+        // A função setupProdutosPage será chamada pelo firebase-config.js APÓS o login.
+        console.log("Página de Produtos Carregada. A busca de dados será iniciada após a autenticação.");
     }
 };
