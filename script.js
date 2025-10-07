@@ -8,71 +8,80 @@ import {
 } from 'firebase/firestore';
 
 // ==============================
-// 1. Cadastro de Produto
+// 1. Verifica se Firebase está pronto
 // ==============================
-window.onAuthStateChanged(auth, (user) => {
-    if (user && window.location.pathname.includes('cadastro-produto.html')) {
-        const form = document.getElementById('cadastroForm');
-        const custoInput = document.getElementById('custoInput');
-        const margemInput = document.getElementById('margemInput');
-        const precoVendaInput = document.getElementById('precoVendaInput');
+function isFirebaseReady() {
+    return typeof db !== 'undefined' && typeof auth !== 'undefined';
+}
 
-        // Atualiza preço de venda automaticamente
-        function calcularPrecoVenda() {
-            const custo = parseFloat(custoInput.value) || 0;
-            const margem = parseFloat(margemInput.value) || 0;
-            const venda = custo + (custo * margem / 100);
-            precoVendaInput.value = venda.toFixed(2);
+// ==============================
+// 2. Cadastro de Produto
+// ==============================
+function setupCadastroProduto(user) {
+    const form = document.getElementById('cadastroForm');
+    const custoInput = document.getElementById('custoInput');
+    const margemInput = document.getElementById('margemInput');
+    const precoVendaInput = document.getElementById('precoVendaInput');
+
+    // Atualiza preço de venda automaticamente
+    function calcularPrecoVenda() {
+        const custo = parseFloat(custoInput.value) || 0;
+        const margem = parseFloat(margemInput.value) || 0;
+        const venda = custo + (custo * margem / 100);
+        precoVendaInput.value = venda.toFixed(2);
+    }
+
+    window.addEventListener('DOMContentLoaded', calcularPrecoVenda);
+    custoInput.addEventListener('input', calcularPrecoVenda);
+    margemInput.addEventListener('input', calcularPrecoVenda);
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!isFirebaseReady() || !user) {
+            alert("Erro: O Firebase não está inicializado ou o usuário não está autenticado.");
+            return;
         }
 
-        // Dispara o cálculo ao carregar a página e ao alterar os campos
-        window.addEventListener('DOMContentLoaded', calcularPrecoVenda);
-        custoInput.addEventListener('input', calcularPrecoVenda);
-        margemInput.addEventListener('input', calcularPrecoVenda);
+        const codigo = document.getElementById('codigoBarras').value;
+        const marca = document.getElementById('marca').value;
+        const descricao = document.getElementById('productDescription').value;
+        const custo = parseFloat(custoInput.value);
+        const margem = parseFloat(margemInput.value);
+        const venda = parseFloat(precoVendaInput.value);
+        const quantidade = parseInt(document.getElementById('productQuantity').value);
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        try {
+            await addDoc(collection(db, 'produtos'), {
+                codigo,
+                marca,
+                descricao,
+                custo,
+                margem,
+                venda,
+                quantidade,
+                criadoPor: user.uid,
+                criadoEm: new Date()
+            });
 
-            const codigo = document.getElementById('codigoBarras').value;
-            const marca = document.getElementById('marca').value;
-            const descricao = document.getElementById('productDescription').value;
-            const custo = parseFloat(custoInput.value);
-            const margem = parseFloat(margemInput.value);
-            const venda = parseFloat(precoVendaInput.value);
-            const quantidade = parseInt(document.getElementById('productQuantity').value);
-
-            try {
-                await addDoc(collection(db, 'produtos'), {
-                    codigo,
-                    marca,
-                    descricao,
-                    custo,
-                    margem,
-                    venda,
-                    quantidade,
-                    criadoPor: user.uid,
-                    criadoEm: new Date()
-                });
-
-                const box = document.getElementById('messageBox');
-                box.textContent = '✅ Produto cadastrado com sucesso!';
-                box.classList.remove('hidden');
-                box.classList.add('bg-green-100', 'text-green-700');
-                form.reset();
-                precoVendaInput.value = '0.00';
-            } catch (error) {
-                console.error('Erro ao salvar produto:', error);
-                const box = document.getElementById('messageBox');
-                box.textContent = '❌ Erro ao salvar produto.';
-                box.classList.remove('hidden');
-                box.classList.add('bg-red-100', 'text-red-700');
-            }
-        });
-    }
-});
+            const box = document.getElementById('messageBox');
+            box.textContent = '✅ Produto cadastrado com sucesso!';
+            box.classList.remove('hidden');
+            box.classList.add('bg-green-100', 'text-green-700');
+            form.reset();
+            precoVendaInput.value = '0.00';
+        } catch (error) {
+            console.error('Erro ao salvar produto:', error);
+            const box = document.getElementById('messageBox');
+            box.textContent = '❌ Erro ao salvar produto.';
+            box.classList.remove('hidden');
+            box.classList.add('bg-red-100', 'text-red-700');
+        }
+    });
+}
 
 // ==============================
-// 2. Listagem de Produtos
+// 3. Listagem de Produtos
 // ==============================
 window.setupProdutosPage = function () {
     const tbody = document.getElementById('productsTableBody');
@@ -112,3 +121,18 @@ window.setupProdutosPage = function () {
         loadingStatus.textContent = `Total de produtos: ${snapshot.size}`;
     });
 };
+
+// ==============================
+// 4. Inicialização segura
+// ==============================
+window.onAuthStateChanged(auth, (user) => {
+    const path = window.location.pathname.split('/').pop();
+
+    if (user && path === 'cadastro-produto.html') {
+        setupCadastroProduto(user);
+    }
+
+    if (user && path === 'produtos.html' && typeof window.setupProdutosPage === 'function') {
+        window.setupProdutosPage();
+    }
+});
