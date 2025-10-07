@@ -7,12 +7,10 @@ import {
     orderBy
 } from 'firebase/firestore';
 
-// Verifica se Firebase está pronto
 function isFirebaseReady() {
     return typeof db !== 'undefined' && typeof auth !== 'undefined';
 }
 
-// Cadastro de Produto
 function setupCadastroProduto(user) {
     const form = document.getElementById('cadastroForm');
     const custoInput = document.getElementById('custoInput');
@@ -77,7 +75,6 @@ function setupCadastroProduto(user) {
     });
 }
 
-// Listagem de Produtos
 window.setupProdutosPage = function () {
     const tbody = document.getElementById('productsTableBody');
     const loadingStatus = document.getElementById('loadingStatus');
@@ -117,7 +114,6 @@ window.setupProdutosPage = function () {
     });
 };
 
-// Inicialização segura
 window.onAuthStateChanged(auth, (user) => {
     const path = window.location.pathname.split('/').pop();
 
