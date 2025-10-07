@@ -7,10 +7,12 @@ import {
     orderBy
 } from 'firebase/firestore';
 
+// Verifica se Firebase está pronto
 function isFirebaseReady() {
     return typeof db !== 'undefined' && typeof auth !== 'undefined';
 }
 
+// Cadastro de Produto
 function setupCadastroProduto(user) {
     const form = document.getElementById('cadastroForm');
     const custoInput = document.getElementById('custoInput');
@@ -45,7 +47,8 @@ function setupCadastroProduto(user) {
         const quantidade = parseInt(document.getElementById('productQuantity').value);
 
         try {
-            await addDoc(collection(db, 'produtos'), {
+            console.log("Salvando produto...");
+            const docRef = await addDoc(collection(db, 'produtos'), {
                 codigo,
                 marca,
                 modelo,
@@ -56,6 +59,7 @@ function setupCadastroProduto(user) {
                 criadoPor: user.uid,
                 criadoEm: new Date()
             });
+            console.log("Produto salvo com ID:", docRef.id);
 
             const box = document.getElementById('messageBox');
             box.textContent = '✅ Produto cadastrado com sucesso!';
@@ -64,7 +68,7 @@ function setupCadastroProduto(user) {
             form.reset();
             precoVendaInput.value = '0.00';
         } catch (error) {
-            console.error('Erro ao salvar produto:', error);
+            console.error("Erro ao salvar produto:", error);
             const box = document.getElementById('messageBox');
             box.textContent = '❌ Erro ao salvar produto.';
             box.classList.remove('hidden');
@@ -73,6 +77,7 @@ function setupCadastroProduto(user) {
     });
 }
 
+// Listagem de Produtos
 window.setupProdutosPage = function () {
     const tbody = document.getElementById('productsTableBody');
     const loadingStatus = document.getElementById('loadingStatus');
