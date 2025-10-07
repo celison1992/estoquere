@@ -1,25 +1,25 @@
 // firebase-config.js
 
-// Importação LOCAL para a função do script.js
+// Importa a função de setup LOCALMENTE. Lembre-se, apenas para arquivos locais.
 import { setupCadastroProduto } from "./script.js"; 
 
-// Configuração do Firebase
+// Configuração do Firebase ATUALIZADA (Use o objeto 'firebase' globalmente)
 const firebaseConfig = {
     apiKey: "AIzaSyCTNWJfq0zcCzNSlnVDenKRy0xyvsEuCkI",
     authDomain: "estoquere-789ee.firebaseapp.com",
     projectId: "estoquere-789ee",
     storageBucket: "estoquere-789ee.firebasestorage.app",
     messagingSenderId: "774218509097",
-    appId: "1:774218509097:web:49483c7fd8ace7b94be538",
-    measurementId: "G-Y4BN386CM6"
+    appId: "1:774218509097:web:e10628c4dd1da2e64be538", 
+    measurementId: "G-B9PGWH5GHR"
 };
 
-// Inicializa Firebase usando o objeto global 'firebase'
+// Inicializa Firebase usando o objeto global 'firebase' (v8-compat)
 const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(app); // Associa o Firestore
-const auth = firebase.auth(app);     // Associa a Autenticação
+const db = firebase.firestore(app); 
+const auth = firebase.auth(app);
 
-// Expor globalmente para uso em script.js (agora desnecessário, mas mantido)
+// Expor globalmente para uso em script.js (garantia)
 window.db = db;
 window.auth = auth;
 
@@ -33,32 +33,39 @@ function toggleFormState(enabled) {
     });
 }
 
-// Autenticação (Usando funções globais)
+// Autenticação e Inicialização do Script
 firebase.auth().onAuthStateChanged(auth, async (user) => {
+    // Extrai o nome do arquivo da URL
     const path = window.location.pathname.split('/').pop();
 
     if (user) {
         console.log("Usuário autenticado:", user.uid);
         toggleFormState(true);
 
+        // Se estiver na página de cadastro, configure o formulário.
+        // Garante que o setup só rode após o DOM estar pronto (crucial para o listener 'submit').
         if (path === 'cadastro-produto.html') {
-            setupCadastroProduto(user);
+            document.addEventListener('DOMContentLoaded', () => {
+                setupCadastroProduto(user);
+            });
         }
 
+        // Se estiver na página de produtos, configure a listagem.
         if (path === 'produtos.html' && typeof window.setupProdutosPage === 'function') {
-            window.setupProdutosPage();
+            document.addEventListener('DOMContentLoaded', () => {
+                window.setupProdutosPage();
+            });
         }
     } else {
         console.log("Tentando login anônimo...");
         try {
             await firebase.auth().signInAnonymously(auth);
             console.log("Login anônimo bem-sucedido.");
+            // O onAuthStateChanged será chamado novamente com o 'user' logado.
         } catch (error) {
             console.error("Erro ao autenticar:", error);
-            toggleFormState(true);
+            // Em caso de falha total, mantemos o formulário desabilitado ou habilitado para debug.
+            toggleFormState(false);
         }
     }
 });
-
-// Removemos a exportação para evitar conflitos de módulo
-// export { db, auth };
