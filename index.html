@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Estoque Simples</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Cadastro de Novo Produto</h1>
+    
+    <div id="scanner-container">
+        <div id="interactive" class="viewport">
+            <video></video>
+        </div>
+        <p id="barcode-result">Código de Barras: Pronto para escanear!</p>
+    </div>
+    
+    <form id="cadastro-form">
+        <label for="codigoBarras">Código de Barras (Externo):</label>
+        <input type="text" id="codigoBarras" name="codigoBarras" placeholder="Escaneie o produto..." readonly required>
+
+        <label for="identificadorInterno">Identificador Interno:</label>
+        <input type="text" id="identificadorInterno" name="identificadorInterno" readonly required>
+
+        <label for="marca">Marca:</label>
+        <input type="text" id="marca" name="marca" required>
+
+        <label for="modelo">Modelo/Descrição:</label>
+        <input type="text" id="modelo" name="modelo" required>
+
+        <label for="custo">Preço de Custo (R$):</label>
+        <input type="number" id="custo" name="custo" step="0.01" required>
+
+        <label for="margemLucro">Margem de Lucro (%) Desejada:</label>
+        <input type="number" id="margemLucro" name="margemLucro" value="30" required>
+
+        <label for="precoVenda">Preço de Venda Sugerido (R$):</label>
+        <input type="text" id="precoVenda" readonly>
+        
+        <button type="submit">Cadastrar no Estoque</button>
+    </form>
+
+    <div id="mensagem-status"></div>
+
+    <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
+    
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
