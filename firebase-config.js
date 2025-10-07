@@ -1,8 +1,7 @@
 // firebase-config.js
 
-// Importa os módulos necessários do Firebase
 import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Configuração do Firebase
@@ -21,16 +20,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Expor globalmente para uso em script.js
+// Expor globalmente
 window.db = db;
 window.auth = auth;
 
 // Controle de formulários
 function toggleFormState(enabled) {
-  const forms = [
-    document.getElementById('cadastroForm'),
-    document.getElementById('perfilForm')
-  ];
+  const forms = [document.getElementById('cadastroForm')];
   forms.forEach(form => {
     if (form) {
       Array.from(form.elements).forEach(el => el.disabled = !enabled);
